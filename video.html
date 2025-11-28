@@ -5,10 +5,16 @@
   <title>動画再生</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<div id="player"></div>
-<a href="index.html">← 一覧へ戻る</a>
+<header>
+  <h1>動画再生</h1>
+</header>
+
+<div class="video-container" id="player"></div>
+
+<a href="index.html" class="back">← 動画一覧に戻る</a>
 
 <script>
   async function loadVideo() {
@@ -20,18 +26,16 @@
     const video = videos.find(v => v.id === id);
 
     if (!video) {
-      document.body.innerHTML = "<h1>動画が見つかりません</h1>";
+      document.getElementById("player").innerHTML = "<h2>動画が見つかりません。</h2>";
       return;
     }
 
     document.title = video.title;
 
     document.getElementById("player").innerHTML = `
-      <h1>${video.title}</h1>
+      <h2>${video.title}</h2>
       <iframe 
         src="https://drive.google.com/file/d/${video.driveId}/preview"
-        width="100%"
-        height="480"
         allow="autoplay"
       ></iframe>
       <p>${video.description}</p>
