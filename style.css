@@ -1,15 +1,8 @@
-/* ==========================
-   基本
-========================== */
 body {
   margin: 0;
   background: #fafafa;
   font-family: "Segoe UI", sans-serif;
 }
-
-/* ==========================
-   ヘッダー
-========================== */
 header {
   position: sticky;
   top: 0;
@@ -18,25 +11,16 @@ header {
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   z-index: 10;
 }
-
 header h1 {
   margin: 0;
   font-size: 22px;
 }
-
-/* ==========================
-   グリッド
-========================== */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   padding: 24px;
   gap: 20px;
 }
-
-/* ==========================
-   カードデザイン
-========================== */
 .card {
   background: white;
   border-radius: 14px;
