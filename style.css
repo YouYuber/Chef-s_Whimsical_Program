@@ -1,43 +1,109 @@
+/* ==========================
+   基本
+========================== */
 body {
-  font-family: sans-serif;
-  margin: 20px;
-  background: #f0f0f0;
+  margin: 0;
+  background: #fafafa;
+  font-family: "Segoe UI", sans-serif;
 }
 
-h1 {
-  text-align: center;
+/* ==========================
+   ヘッダー
+========================== */
+header {
+  position: sticky;
+  top: 0;
+  background: white;
+  padding: 16px 24px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  z-index: 10;
 }
 
+header h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+/* ==========================
+   グリッド
+========================== */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 16px;
-  margin-top: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  padding: 24px;
+  gap: 20px;
 }
 
+/* ==========================
+   カードデザイン
+========================== */
 .card {
   background: white;
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  text-align: center;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
 }
 
 .card img {
   width: 100%;
-  border-radius: 8px;
+  display: block;
 }
 
-.card a {
-  text-decoration: none;
-  color: black;
+.card-content {
+  padding: 12px 14px;
 }
 
-.card h2 {
-  margin: 10px 0 5px 0;
+.card-content h2 {
+  font-size: 18px;
+  margin: 6px 0 4px;
 }
 
-.card p {
+.card-content p {
   margin: 0;
-  color: #555;
+  color: #666;
+}
+
+/* ==========================
+   動画ページ
+========================== */
+.video-container {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 0 12px;
+}
+
+iframe {
+  border: none;
+  width: 100%;
+  height: 500px;
+  border-radius: 12px;
+}
+
+.back {
+  margin: 20px 0;
+  display: inline-block;
+  color: #0066cc;
+  text-decoration: none;
+}
+.back:hover {
+  text-decoration: underline;
+}
+
+/* ==========================
+   スマホ
+========================== */
+@media (max-width: 600px) {
+  iframe {
+    height: 260px;
+  }
+
+  header h1 {
+    font-size: 18px;
+  }
 }
