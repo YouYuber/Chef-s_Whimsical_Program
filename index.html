@@ -1,0 +1,34 @@
+  <!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>動画一覧</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>限定動画一覧</h1>
+<div id="video-list" class="grid"></div>
+
+<script>
+  async function loadVideos() {
+    const res = await fetch("videos.json");
+    const videos = await res.json();
+
+    const container = document.getElementById("video-list");
+    container.innerHTML = videos.map(v => `
+      <div class="card">
+        <a href="video.html?id=${v.id}">
+          <img src="https://drive.google.com/thumbnail?id=${v.driveId}" />
+          <h2>${v.title}</h2>
+          <p>${v.description}</p>
+        </a>
+      </div>
+    `).join("");
+  }
+
+  loadVideos();
+</script>
+
+</body>
+</html>
