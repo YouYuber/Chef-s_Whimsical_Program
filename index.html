@@ -1,38 +1,163 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>動画一覧</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <title>限定動画一覧</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
 <header>
-  <h1>限定公開動画</h1>
+  <h1>限定動画</h1>
+
+  <div class="header-actions">
+    <div class="search">
+      <input id="searchInput" placeholder="動画を検索..." />
+      <button id="clearSearch" title="クリア">✕</button>
+    </div>
+
+    <a class="btn" href="admin.html" id="adminBtn">管理</a>
+  </div>
 </header>
 
 <div id="video-list" class="grid"></div>
 
-<script>
-  async function loadVideos() {
-    const res = await fetch("videos.json");
-    const videos = await res.json();
+<!-- パスワードモーダル -->
+<div id="pwModal" class="modal-backdrop hidden">
+  <div class="modal">
+    <h3>閲覧パスワードを入力してください</h3>
+    <input id="pwInput" type="password" placeholder="パスワード">
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button id="pwCancel" class="btn" style="background:#999">閉じる</button>
+      <button id="pwSubmit" class="btn">送信</button>
+    </div>
+    <p style="margin-top:8px;color:#666;font-size:13px;">※友達限定の簡易ロックです。URLやパスワードは信頼できる人だけに共有してください。</p>
+  </div>
+</div>
 
-    const container = document.getElementById("video-list");
-    container.innerHTML = videos.map(v => `
-      <div class="card">
-        <a href="video.html?id=${v.id}">
-          <img src="https://drive.google.com/thumbnail?id=${v.driveId}" />
-        </a>
-        <div class="card-content">
-          <a href="video.html?id=${v.id}" style="text-decoration:none;color:black;">
-            <h2>${v.title}</h2>
-            <p>${v.description}</p>
-          </a>
-        </div>
-      </div>
-    `).join("");
+<script>
+/* ====== 設定（ここを必要に応じて書き換えてください） ======
+   SITE_PASSWORD: 管理・閲覧用のパスワード（平文でクライアントに入るので公開リポジトリの場合は複雑に）
+   SITE_SECRET_KEY: URLの ?key= に設定する秘密キー（友だちに渡す短い文字列）
+   例: https://.../index.html?key=hogehoge
+========================================================= */
+const SITE_PASSWORD = "yourStrongPassword123";   // ← 必ず書き換えてください
+const SITE_SECRET_KEY = "mySecretKey2025";       // ← 必ず書き換えてください
+
+/* ========== 保護チェック ========== */
+function showModal(show){
+  document.getElementById("pwModal")[show ? "classList.remove" : "classList.add"]("hidden");
+}
+function hasValidKey(){
+  const params = new URLSearchParams(location.search);
+  const k = params.get("key");
+  const stored = localStorage.getItem("site_secret_key");
+  return (k && k === SITE_SECRET_KEY) || (stored && stored === SITE_SECRET_KEY);
+}
+function hasValidPassword(){
+  const stored = localStorage.getItem("site_pw_ok");
+  return stored === "1";
+}
+
+async function ensureAccess(){
+  if (hasValidKey() || hasValidPassword()) return true;
+  showModal(true);
+  return new Promise(resolve => {
+    document.getElementById("pwSubmit").onclick = () => {
+      const v = document.getElementById("pwInput").value;
+      if (v === SITE_PASSWORD) {
+        localStorage.setItem("site_pw_ok","1");
+        showModal(false);
+        resolve(true);
+      } else {
+        alert("パスワードが違います");
+      }
+    };
+    document.getElementById("pwCancel").onclick = () => {
+      showModal(false);
+      resolve(false);
+    };
+  });
+}
+
+/* ========== 動画読み込みと描画 ========== */
+async function loadVideos() {
+  const ok = await ensureAccess();
+  if (!ok) {
+    document.body.innerHTML = "<div class='center' style='padding:80px;'><h2>閲覧が許可されていません</h2></div>";
+    return;
   }
-  loadVideos();
+
+  const res = await fetch("videos.json");
+  const videos = await res.json();
+  window._videos_all = videos; // 検索用グローバル
+  renderList(videos);
+}
+
+function renderList(videos){
+  const container = document.getElementById("video-list");
+  if (!videos.length) {
+    container.innerHTML = "<div class='center' style='grid-column:1/-1;padding:40px;'><em>動画がまだありません</em></div>";
+    return;
+  }
+  container.innerHTML = videos.map(v => `
+    <div class="card">
+      <a href="video.html?id=${encodeURIComponent(v.id)}&key=${SITE_SECRET_KEY}">
+        <div class="thumb">
+          <img src="https://drive.google.com/thumbnail?id=${v.driveId}" alt="${escapeHtml(v.title)}" />
+          <div class="play-overlay" title="再生">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+      </a>
+      <div class="card-content">
+        <a href="video.html?id=${encodeURIComponent(v.id)}&key=${SITE_SECRET_KEY}" style="text-decoration:none;color:inherit;">
+          <h2>${escapeHtml(v.title)}</h2>
+          <p>${escapeHtml(v.description)}</p>
+        </a>
+      </div>
+    </div>
+  `).join("");
+}
+
+/* ========== 検索機能 ========== */
+function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+document.getElementById("searchInput").addEventListener("input", e => {
+  const q = e.target.value.trim().toLowerCase();
+  if (!q) {
+    renderList(window._videos_all || []);
+    return;
+  }
+  const filtered = (window._videos_all || []).filter(v =>
+    (v.title||"").toLowerCase().includes(q) || (v.description||"").toLowerCase().includes(q) || (v.driveId||"").includes(q)
+  );
+  renderList(filtered);
+});
+document.getElementById("clearSearch").onclick = () => {
+  document.getElementById("searchInput").value = "";
+  renderList(window._videos_all || []);
+};
+
+/* ========== 管理ボタン：簡易保護（localStorageでPW成功を確認） ========== */
+document.getElementById("adminBtn").addEventListener("click", (e)=> {
+  // 管理画面は同じパスワードで保護。まだ未承認ならモーダルを表示してから移動
+  if (hasValidPassword()) return; // そのまま遷移
+  e.preventDefault();
+  showModal(true);
+  document.getElementById("pwSubmit").onclick = () => {
+    const v = document.getElementById("pwInput").value;
+    if (v === SITE_PASSWORD) {
+      localStorage.setItem("site_pw_ok","1");
+      showModal(false);
+      location.href = "admin.html";
+    } else {
+      alert("パスワードが違います");
+    }
+  };
+});
+
+loadVideos();
 </script>
 
 </body>
