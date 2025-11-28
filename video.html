@@ -1,48 +1,55 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
   <title>動画再生</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
 
 <header>
   <h1>動画再生</h1>
+  <div style="margin-left:auto;padding-right:20px;"><a class="link" href="index.html">一覧へ戻る</a></div>
 </header>
 
 <div class="video-container" id="player"></div>
 
-<a href="index.html" class="back">← 動画一覧に戻る</a>
-
 <script>
-  async function loadVideo() {
-    const params = new URLSearchParams(location.search);
-    const id = params.get("id");
+const SITE_SECRET_KEY = "mySecretKey2025"; // ← index.html と合わせてください
 
-    const res = await fetch("videos.json");
-    const videos = await res.json();
-    const video = videos.find(v => v.id === id);
+function hasValidKey(){
+  const params = new URLSearchParams(location.search);
+  const k = params.get("key");
+  return k && k === SITE_SECRET_KEY;
+}
 
-    if (!video) {
-      document.getElementById("player").innerHTML = "<h2>動画が見つかりません。</h2>";
-      return;
-    }
-
-    document.title = video.title;
-
-    document.getElementById("player").innerHTML = `
-      <h2>${video.title}</h2>
-      <iframe 
-        src="https://drive.google.com/file/d/${video.driveId}/preview"
-        allow="autoplay"
-      ></iframe>
-      <p>${video.description}</p>
-    `;
+async function loadVideo(){
+  if (!hasValidKey()){
+    // 秘密キーがない／違う場合は拒否（index経由での閲覧は通常 key を付けられる）
+    document.getElementById("player").innerHTML = "<div style='padding:60px;text-align:center;'><h2>この動画は非公開です（秘密キーが必要）</h2><p>一覧ページからアクセスしてください。</p></div>";
+    return;
   }
 
-  loadVideo();
+  const params = new URLSearchParams(location.search);
+  const id = params.get("id");
+  const res = await fetch("videos.json");
+  const videos = await res.json();
+  const video = videos.find(v => v.id === id);
+  if (!video){
+    document.getElementById("player").innerHTML = "<h2>動画が見つかりません</h2>";
+    return;
+  }
+  document.title = video.title;
+  document.getElementById("player").innerHTML = `
+    <h2>${escapeHtml(video.title)}</h2>
+    <iframe src="https://drive.google.com/file/d/${video.driveId}/preview" allow="autoplay; fullscreen"></iframe>
+    <p style="color:#666;margin-top:10px;">${escapeHtml(video.description)}</p>
+  `;
+}
+function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+loadVideo();
 </script>
 
 </body>
