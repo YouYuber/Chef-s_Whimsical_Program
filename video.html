@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>動画再生</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="player"></div>
+<a href="index.html">← 一覧へ戻る</a>
+
+<script>
+  async function loadVideo() {
+    const params = new URLSearchParams(location.search);
+    const id = params.get("id");
+
+    const res = await fetch("videos.json");
+    const videos = await res.json();
+    const video = videos.find(v => v.id === id);
+
+    if (!video) {
+      document.body.innerHTML = "<h1>動画が見つかりません</h1>";
+      return;
+    }
+
+    document.title = video.title;
+
+    document.getElementById("player").innerHTML = `
+      <h1>${video.title}</h1>
+      <iframe 
+        src="https://drive.google.com/file/d/${video.driveId}/preview"
+        width="100%"
+        height="480"
+        allow="autoplay"
+      ></iframe>
+      <p>${video.description}</p>
+    `;
+  }
+
+  loadVideo();
+</script>
+
+</body>
+</html>
